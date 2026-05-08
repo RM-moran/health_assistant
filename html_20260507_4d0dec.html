@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>医心助手 · 智能医疗问答</title>
+    <!-- Google Fonts & Font Awesome (美观图标库) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(145deg, #e9f1f8 0%, #dae8f0 100%);
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        /* 主容器 —— 移动优先的卡片式界面 */
+        .app-container {
+            width: 100%;
+            max-width: 550px;
+            height: 85vh;
+            min-height: 600px;
+            background: #ffffff;
+            border-radius: 2rem;
+            box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.25), 0 2px 10px 0 rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            backdrop-filter: blur(0px);
+            transition: all 0.2s ease;
+        }
+
+        /* 头部区域 (医疗风渐变+品牌) */
+        .chat-header {
+            background: linear-gradient(135deg, #1A6F5E 0%, #0E8B72 100%);
+            padding: 1.2rem 1.5rem;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .avatar-icon {
+            background: rgba(255,255,255,0.2);
+            width: 44px;
+            height: 44px;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.7rem;
+            backdrop-filter: blur(4px);
+        }
+        .title-section h1 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            letter-spacing: -0.3px;
+        }
+        .title-section p {
+            font-size: 0.7rem;
+            opacity: 0.85;
+            margin-top: 2px;
+            font-weight: 400;
+        }
+        .reset-btn {
+            background: rgba(255,255,255,0.18);
+            border: none;
+            color: white;
+            font-size: 1.25rem;
+            width: 40px;
+            height: 40px;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .reset-btn:hover {
+            background: rgba(255,255,255,0.35);
+            transform: scale(0.96);
+        }
+
+        /* 对话消息区域 (滚动) */
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            background: #fefefe;
+            scroll-behavior: smooth;
+        }
+        /* 自定义滚动条 */
+        .chat-messages::-webkit-scrollbar {
+            width: 5px;
+        }
+        .chat-messages::-webkit-scrollbar-track {
+            background: #eef2f5;
+            border-radius: 10px;
+        }
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #b9d0ca;
+            border-radius: 10px;
+        }
+
+        /* 消息气泡通用 */
+        .message {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            max-width: 92%;
+            animation: fadeSlideUp 0.2s ease;
+        }
+        @keyframes fadeSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+        .message-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            background: #eef3fa;
+            flex-shrink: 0;
+        }
+        .user .message-avatar {
+            background: #1A6F5E;
+            color: white;
+        }
+        .bubble {
+            max-width: 100%;
+            padding: 12px 16px;
+            border-radius: 22px;
+            font-size: 0.9rem;
+            line-height: 1.45;
+            box-shadow: 0 1px 1px rgba(0,0,0,0.03);
+        }
+        .user .bubble {
+            background: #1A6F5E;
+            color: white;
+            border-bottom-right-radius: 5px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .assistant .bubble {
+            background: #f0f2f5;
+            color: #1a2e35;
+            border-bottom-left-radius: 5px;
+            border: 1px solid #e2e8f0;
+        }
+        .bubble p {
+            margin: 0;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        /* 加载占位符样式 */
+        .bubble.typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 12px 18px;
+        }
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: #8c9aa5;
+            border-radius: 50%;
+            display: inline-block;
+            animation: pulse 1.2s infinite ease;
+        }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes pulse {
+            0%, 60%, 100% { transform: scale(0.8); opacity: 0.4; }
+            30% { transform: scale(1.2); opacity: 1; }
+        }
+
+        /* 输入区域 + 快捷问询 */
+        .input-area {
+            background: #ffffff;
+            border-top: 1px solid #e9edf2;
+            padding: 0.9rem 1rem 1rem 1rem;
+        }
+        .quick-questions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .quick-chip {
+            background: #eff5f9;
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #1A6F5E;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .quick-chip i {
+            font-size: 0.7rem;
+        }
+        .quick-chip:hover {
+            background: #e0f0ea;
+            transform: translateY(-1px);
+        }
+        .input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #f7fafc;
+            border-radius: 60px;
+            padding: 4px 8px 4px 18px;
+            border: 1px solid #e2e8f0;
+            transition: 0.2s;
+        }
+        .input-wrapper:focus-within {
+            border-color: #1A6F5E;
+            box-shadow: 0 0 0 3px rgba(26,111,94,0.2);
+            background: white;
+        }
+        .input-wrapper input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            padding: 12px 0;
+            font-size: 0.95rem;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            color: #1f2a3a;
+        }
+        .input-wrapper input::placeholder {
+            color: #9aaebf;
+            font-weight: 400;
+        }
+        .send-btn {
+            background: #1A6F5E;
+            border: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            color: white;
+            font-size: 1.25rem;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .send-btn:active {
+            transform: scale(0.94);
+            background: #0e5e4f;
+        }
+        .send-btn.disabled, .send-btn:disabled {
+            background: #b9d0ca;
+            cursor: not-allowed;
+            opacity: 0.6;
+            transform: none;
+        }
+        .footer-note {
+            text-align: center;
+            font-size: 0.65rem;
+            color: #90a3b3;
+            margin-top: 10px;
+            padding: 0 0.5rem;
+        }
+        .footer-note i {
+            margin-right: 4px;
+        }
+
+        /* 响应微调 */
+        @media (max-width: 550px) {
+            .app-container {
+                height: 90vh;
+                border-radius: 1.5rem;
+            }
+            .bubble {
+                font-size: 0.85rem;
+            }
+            .quick-chip {
+                font-size: 0.7rem;
+                padding: 5px 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <!-- 头部 -->
+    <div class="chat-header">
+        <div class="header-brand">
+            <div class="avatar-icon">
+                <i class="fas fa-stethoscope"></i>
+            </div>
+            <div class="title-section">
+                <h1>医心助手</h1>
+                <p>AI医疗问答 · 健康科普</p>
+            </div>
+        </div>
+        <button class="reset-btn" id="clearChatBtn" aria-label="重置对话">
+            <i class="fas fa-trash-alt"></i>
+        </button>
+    </div>
+
+    <!-- 对话展示区 -->
+    <div class="chat-messages" id="chatMessagesContainer">
+        <!-- 动态消息会由js渲染 -->
+    </div>
+
+    <!-- 底部输入区 -->
+    <div class="input-area">
+        <div class="quick-questions" id="quickQuestionsList">
+            <!-- 快捷问题通过js生成也可以，但直接写静态方便 -->
+            <button class="quick-chip" data-question="头痛怎么办？"><i class="fas fa-head-side-medical"></i> 头痛怎么办？</button>
+            <button class="quick-chip" data-question="发烧如何降温？"><i class="fas fa-temperature-high"></i> 发烧如何降温？</button>
+            <button class="quick-chip" data-question="高血压注意事项"><i class="fas fa-heartbeat"></i> 高血压注意事项</button>
+            <button class="quick-chip" data-question="肚子痛可能原因"><i class="fas fa-stomach"></i> 肚子痛可能原因</button>
+            <button class="quick-chip" data-question="失眠怎么缓解"><i class="fas fa-moon"></i> 失眠怎么缓解</button>
+        </div>
+        <div class="input-wrapper">
+            <input type="text" id="messageInput" placeholder="描述您的症状或健康疑问..." autocomplete="off">
+            <button class="send-btn" id="sendBtn">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+        <div class="footer-note">
+            <i class="fas fa-shield-alt"></i> 科普参考 · 不能替代专业诊疗 · 急重症请立即就医
+        </div>
+    </div>
+</div>
+
+<script>
+    // ======================= 医疗问答智能映射库 =======================
+    // 基于症状/关键词的模拟回复 （专业 + 免责融合）
+    function getMedicalResponse(userMessage) {
+        const msg = userMessage.toLowerCase().trim();
+        
+        // 紧急优先级最高  — 立刻警示
+        const emergencyKeywords = ['胸痛', '胸闷剧痛', '呼吸困难严重', '中风', '昏迷', '出血不止', '剧烈头痛喷射呕吐', '自杀', '想死', '120'];
+        for (let word of emergencyKeywords) {
+            if (msg.includes(word)) {
+                return "⚠️ 紧急提示：您描述的症状可能属于医疗急症！请立即停止自我处理，马上拨打120或前往最近急诊室。本AI无法处理急救情况，请迅速寻求专业医疗帮助。";
+            }
+        }
+        
+        // 常见症状映射表 (更丰富回复，附就医指引)
+        const symptomMap = [
+            { keywords: ['头痛', '头疼', '偏头痛'], response: "💡 头痛常见原因：紧张性头痛、偏头痛或疲劳。建议：① 保持充足休息及水分；② 避免强光噪音；③ 如伴随恶心/视力模糊或持续加重，请及时就医排查脑部问题。注意：止痛药请遵医嘱使用。" },
+            { keywords: ['发烧', '发热', '高热'], response: "🌡️ 发热（腋温≥37.3℃）提示免疫反应。居家护理：① 补充温水，物理降温（温毛巾擦拭）；② 体温>38.5℃且不适明显时按说明书服用退热药；③ 儿童/老人持续发热超3天，或伴抽搐、意识模糊请立即就诊。" },
+            { keywords: ['咳嗽', '干咳', '咳痰'], response: "🍃 咳嗽常见于感冒、过敏或支气管炎。建议：多喝温水湿润气道，避免刺激性气体。若咳嗽超2周、伴高热/胸痛/呼吸困难或痰中带血，需至呼吸科就诊，排除肺炎或结核。" },
+            { keywords: ['高血压', '血压高'], response: "❤️ 高血压管理核心：低盐饮食(每日<5g盐)、规律运动、戒烟限酒。定期监测血压，如连续高于140/90mmHg请遵医嘱服药，切勿自行停药。保持情绪平稳，预防心脑血管事件。" },
+            { keywords: ['肚子痛', '腹痛', '胃痛', '腹部绞痛'], response: "🩺 腹痛原因繁杂（胃肠炎、结石、阑尾炎等）。暂时避免进食刺激食物，可热敷缓解。若疼痛剧烈、持续呕吐、便血或按压反跳痛，请立刻就医；女性需排除妇科问题。" },
+            { keywords: ['失眠', '睡不好', '难以入睡'], response: "🌙 改善失眠小技巧：固定作息时间、睡前1小时远离电子屏幕、营造黑暗环境；避免咖啡因/酒精。若长期失眠影响生活，建议咨询心理科或神经内科，排除焦虑抑郁因素。" },
+            { keywords: ['恶心', '呕吐', '反胃'], response: "🤢 恶心呕吐可能由消化问题、眩晕、妊娠等引起。轻症可小口补充电解质水，清淡饮食。若呕吐剧烈、呈喷射状、伴头痛或脱水迹象（口干、尿少），需紧急就医。" },
+            { keywords: ['腹泻', '拉肚子'], response: "💧 腹泻注意防脱水：补充口服补液盐，少食多餐（白粥/香蕉）。避免乳制品及油腻食物。持续超过3天、便血/高热请就诊。老人/儿童尤其要警惕脱水。" },
+            { keywords: ['焦虑', '心慌', '紧张'], response: "🧘 焦虑情绪自我调节：腹式呼吸+正念冥想，适度运动释放压力。寻求亲友支持。若长期惊恐影响生活，建议心理科就诊，无需羞于求助。健康心态是良药。" },
+            { keywords: ['感冒', '流鼻涕', '打喷嚏'], response: "🤧 普通感冒多休息，多喝温水，生理盐水洗鼻缓解鼻塞。一般7天自愈，若发热持续、呼吸困难或浓痰，需排查流感或肺炎。不滥用抗生素，必要时对症治疗。" },
+            { keywords: ['糖尿病', '血糖高'], response: "🍬 糖尿病友注意：定时监测血糖，均衡膳食（控糖控碳水），规律运动。遵医嘱用药，定期复查糖化血红蛋白。警惕低血糖症状（心慌、冷汗），随身带糖果应急。" },
+            { keywords: ['扭伤', '拉伤', '脚肿'], response: "🦵 急性扭伤遵循RICE原则：Rest休息，Ice冰敷（每次15分钟），Compression加压包扎，Elevation抬高患肢。若无法承重、严重变形请拍X光排除骨折。" },
+            { keywords: ['过敏', '皮疹', '荨麻疹'], response: "🌸 过敏需远离致敏原（食物/花粉等）。轻度可口服抗组胺药。如伴呼吸困难、喉头水肿、休克前兆，立刻急诊！反复过敏建议变态反应科查过敏原。" },
+        ];
+        
+        // 特殊查询：用药建议
+        if (msg.includes('药') || msg.includes('吃药') || msg.includes('药物')) {
+            return "💊 用药安全提醒：任何药物请咨询医生/药师，不可随意服用处方药或改变剂量。抗生素需凭处方，止痛药过度使用伤肝肾。本助手不推荐具体药品名，请遵循正规诊疗。";
+        }
+        
+        // 疫苗、体检类别
+        if (msg.includes('疫苗') || msg.includes('接种')) {
+            return "💉 疫苗接种是预防疾病重要手段。儿童按计划免疫，成人流感疫苗、HPV等建议咨询社区医院。接种后正常反应如低热、局部红肿，多可自愈，严重反应及时就医。";
+        }
+        
+        // 遍历匹配
+        for (let item of symptomMap) {
+            for (let kw of item.keywords) {
+                if (msg.includes(kw)) {
+                    return item.response + "\n\n📌 *本内容仅供健康科普，不能替代专业诊断。如有不适请线下就医。*";
+                }
+            }
+        }
+        
+        // 健康生活类模糊匹配
+        if (msg.includes('健康') || msg.includes('养生') || msg.includes('怎么吃') || msg.includes('运动')) {
+            return "🥗 健康基石：均衡膳食（蔬果+优质蛋白），每周≥150分钟中等强度运动，充足睡眠，戒烟限酒，定期体检。小习惯成就大健康。有任何具体健康问题，可进一步详细描述。";
+        }
+        
+        // 默认回复（温和引导）
+        return "🤝 感谢您的提问。由于医疗复杂性，针对您的问题建议结合具体情况咨询医生。您可以描述更详细的症状（部位、时间、伴随表现），我会提供更多科普参考。请记住，持续不适或加重应尽早就医。\n\n🏥 医心助手时刻关注您的健康，但仅供参考，不可代替面诊。";
+    }
+    
+    // ======================= 全局变量 & DOM 元素 =======================
+    const messagesContainer = document.getElementById('chatMessagesContainer');
+    const messageInput = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const clearBtn = document.getElementById('clearChatBtn');
+    
+    // 消息存储（用于重新渲染, 保持统一）
+    let messagesList = [];     // 每个元素 { role: 'user' 或 'assistant', content: string, isLoading?: boolean 临时标记? 但我们处理loading占位时单独加入类型 }
+    let isWaitingForReply = false;   // 防止重复请求
+    let pendingTimeout = null;       // 清空时中断延迟回复
+    
+    // ---------- 辅助函数 ----------
+    // 滚动到底部
+    function scrollToBottom() {
+        if (messagesContainer) {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+    }
+    
+    // 渲染所有消息 (从messagesList生成DOM)
+    function renderMessages() {
+        if (!messagesContainer) return;
+        messagesContainer.innerHTML = '';
+        for (let msg of messagesList) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${msg.role === 'user' ? 'user' : 'assistant'}`;
+            
+            // 头像区域
+            const avatarDiv = document.createElement('div');
+            avatarDiv.className = 'message-avatar';
+            if (msg.role === 'user') {
+                avatarDiv.innerHTML = '<i class="fas fa-user"></i>';
+            } else {
+                avatarDiv.innerHTML = '<i class="fas fa-robot"></i>';
+            }
+            
+            const bubbleDiv = document.createElement('div');
+            bubbleDiv.className = 'bubble';
+            
+            // 特殊处理: 如果是加载占位 (内容为null或特殊标识)
+            if (msg.isTyping) {
+                bubbleDiv.classList.add('typing-indicator');
+                bubbleDiv.innerHTML = `<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>`;
+            } else {
+                const contentPara = document.createElement('p');
+                // 保留换行
+                contentPara.innerText = msg.content;
+                bubbleDiv.appendChild(contentPara);
+            }
+            
+            messageDiv.appendChild(avatarDiv);
+            messageDiv.appendChild(bubbleDiv);
+            messagesContainer.appendChild(messageDiv);
+        }
+        scrollToBottom();
+    }
+    
+    // 添加普通消息 (不自动触发AI)
+    function addMessageToLocal(role, content, isTyping = false) {
+        messagesList.push({ role, content, isTyping: !!isTyping });
+        renderMessages();
+    }
+    
+    // 移除最后一个消息 (如果是占位则移除)
+    function removeLastTypingMessage() {
+        const lastMsg = messagesList[messagesList.length - 1];
+        if (lastMsg && lastMsg.isTyping) {
+            messagesList.pop();
+            renderMessages();
+            return true;
+        }
+        return false;
+    }
+    
+    // 发送消息主流程（用户输入）
+    async function sendUserMessage(questionText) {
+        if (isWaitingForReply) {
+            // 轻提醒：不打扰，可忽略or增加toast风格提示，简易通过控制台免提醒
+            return;
+        }
+        let userMsg = questionText.trim();
+        if (userMsg === "") return;
+        
+        // 1. 添加用户消息
+        addMessageToLocal('user', userMsg);
+        // 清空输入框
+        if (messageInput) messageInput.value = '';
+        
+        // 2. 锁定UI & 显示助手“输入中”占位
+        isWaitingForReply = true;
+        setControlsDisabled(true);
+        // 加入一条loading占位消息
+        addMessageToLocal('assistant', '', true);   // isTyping = true
+        
+        // 3. 模拟后台延迟 (体现专业思考)
+        if (pendingTimeout) clearTimeout(pendingTimeout);
+        pendingTimeout = setTimeout(() => {
+            // 实际生成回复内容
+            const replyContent = getMedicalResponse(userMsg);
+            // 移除占位消息
+            removeLastTypingMessage();
+            // 添加实际助手回复
+            addMessageToLocal('assistant', replyContent);
+            // 解锁
+            isWaitingForReply = false;
+            setControlsDisabled(false);
+            pendingTimeout = null;
+            scrollToBottom();
+        }, 800 + Math.random() * 400);  // 0.8~1.2s延迟，更像真实分析
+    }
+    
+    // 控制UI组件禁用/启用 (发送按钮，快捷按钮，输入框)
+    function setControlsDisabled(disabled) {
+        if (sendBtn) sendBtn.disabled = disabled;
+        if (messageInput) messageInput.disabled = disabled;
+        // 快捷按钮
+        const quickBtns = document.querySelectorAll('.quick-chip');
+        quickBtns.forEach(btn => {
+            if (disabled) {
+                btn.style.opacity = '0.6';
+                btn.style.pointerEvents = 'none';
+            } else {
+                btn.style.opacity = '1';
+                btn.style.pointerEvents = 'auto';
+            }
+        });
+        if (disabled) {
+            sendBtn.classList.add('disabled');
+        } else {
+            sendBtn.classList.remove('disabled');
+        }
+    }
+    
+    // 重置对话 (清空所有消息，恢复欢迎语)
+    function resetConversation() {
+        // 如果正有未完成的请求，中断并清理timer
+        if (pendingTimeout) {
+            clearTimeout(pendingTimeout);
+            pendingTimeout = null;
+        }
+        // 如果处于等待状态，强行清空等待标志，移除最后的占位消息（如果存在一次渲染未完成）
+        if (isWaitingForReply) {
+            // 移除可能存在的typing占位消息
+            removeLastTypingMessage();
+            isWaitingForReply = false;
+            setControlsDisabled(false);
+        }
+        // 重置消息列表: 助手的欢迎语（带免责科普）
+        messagesList = [];
+        const welcomeMessage = "👋 您好！我是医心助手，您的健康科普伙伴。\n\n💚 我可以针对常见症状、健康问题提供参考建议，但所有内容不能替代执业医师面对面诊疗。\n\n✨ 请问您哪里不舒服？或直接描述健康疑问，我会尽力提供专业、温和的解答。如果出现紧急情况请立即到医院就诊。";
+        addMessageToLocal('assistant', welcomeMessage);
+        // 确保输入框可用，清空输入内容
+        if (messageInput) messageInput.value = '';
+        messageInput.disabled = false;
+        setControlsDisabled(false);
+    }
+    
+    // 事件绑定与初始化
+    function init() {
+        resetConversation();  // 初始欢迎消息
+        
+        // 发送事件：点击按钮 / 回车
+        sendBtn.addEventListener('click', () => {
+            if (isWaitingForReply) return;
+            const msg = messageInput.value;
+            if (msg.trim()) sendUserMessage(msg);
+        });
+        
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (isWaitingForReply) return;
+                const msg = messageInput.value;
+                if (msg.trim()) sendUserMessage(msg);
+            }
+        });
+        
+        // 清除聊天记录
+        clearBtn.addEventListener('click', () => {
+            resetConversation();
+        });
+        
+        // 快捷问题: 绑定委托事件
+        const quickContainer = document.getElementById('quickQuestionsList');
+        if (quickContainer) {
+            quickContainer.addEventListener('click', (e) => {
+                const chip = e.target.closest('.quick-chip');
+                if (!chip) return;
+                if (isWaitingForReply) return;
+                const preQuestion = chip.getAttribute('data-question');
+                if (preQuestion) {
+                    sendUserMessage(preQuestion);
+                }
+            });
+        }
+        // 额外设置focus
+        messageInput.focus();
+    }
+    
+    // 启动应用
+    init();
+</script>
+</body>
+</html>
